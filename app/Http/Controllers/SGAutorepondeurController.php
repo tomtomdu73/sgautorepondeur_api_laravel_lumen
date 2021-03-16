@@ -26,9 +26,6 @@ class SGAutorepondeurController extends Controller
 
             return response()->json(['response' => 'Error', 'message' => $e], 401);
         }
-
-
-        
     }
 
     public function call($action, $_datas)
