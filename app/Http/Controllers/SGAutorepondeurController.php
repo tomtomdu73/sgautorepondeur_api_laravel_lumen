@@ -9,7 +9,7 @@ class SGAutorepondeurController extends Controller
     public function subscribe(Request $request)
     {
         $this->validate($request, [
-            'nom' => 'required|string',
+            'nom' => 'string',
             'prenom' => 'required|string',
             'email' => 'required|email',
             'listeid' => 'required|numeric'
