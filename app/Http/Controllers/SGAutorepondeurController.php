@@ -12,13 +12,16 @@ class SGAutorepondeurController extends Controller
             'nom' => 'string',
             'prenom' => 'required|string',
             'email' => 'required|email',
-            'listeid' => 'required|numeric'
         ]);
 
-        $data = $request->all();
+        $data = array(
+            'email' => $request->input('email'),
+            'attributes' => ["PRENOM" => $request->input('prenom'), "NOM" => $request->has ('nom') ? $request->input('nom') : ''],
+            'listIds' => [4]
+        );
 
         try{
-            $req = $this->call('set_subscriber', $data);
+            $req = $this->call($data);
 
             return response()->json(['response' => $req, 'message' => 'success' ], 200);
             
@@ -28,22 +31,24 @@ class SGAutorepondeurController extends Controller
         }
     }
 
-    public function call($action, $_datas)
+    public function call($_datas)
     {
-        $_datas['action'] = $action;
-        $_datas['codeactivation'] = env('SGAUTOREPONDEUR_API_KEY');
-        $_datas['membreid'] = env('SGAUTOREPONDEUR_MEMBER_ID');
+        $client = new \GuzzleHttp\Client();
+        $endpoint = 'https://api.sendinblue.com/v3/contacts';
 
-        $handle = curl_init(env('SGAUTOREPONDEUR_API_URL'));
-        curl_setopt($handle, CURLOPT_POST, true);
-        curl_setopt($handle, CURLOPT_POSTFIELDS, http_build_query($_datas));
-        curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
-        $req = curl_exec($handle);
-        curl_close($handle);
-
-        if ($req === FALSE) {
-            throw new Exception('Aucun résultat renvoyé par SG-Autorépondeur');
+        $response = $client->request('POST', $endpoint,[
+            'headers' => [
+                'api-key' => env('SENDINBLUE_API_KEY')
+            ],
+            'json' => $_datas
+        ]);
+        
+        if (!$response) {
+            throw new Exception('Aucun résultat renvoyé par SendinBlue');
         }
-        return $req;
+
+        $data = json_decode($response->getBody()->getContents(), true);
+
+        return $data;
     }
 }
